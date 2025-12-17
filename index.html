@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AR Розклад - Live</title>
+    <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+</head>
+
+<body style="margin : 0px; overflow: hidden;">
+
+    <a-scene embedded arjs='sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;'>
+
+        <a-marker type='barcode' value='1'>
+            <a-entity position="0 0 0" rotation="-90 0 0" scale="1.5 1.5 1.5">
+                <a-plane position="0 -0.5 0" width="4" height="4.5" color="#FFF" opacity="0.95"></a-plane>
+                <a-plane position="0 1.5 0.01" width="4" height="0.5" color="#D32F2F"></a-plane>
+                <a-text value="AUD: 2" font="ukrFont.json" shader="msdf" negate="false" align="center" position="0 1.5 0.02" color="#FFF" width="6"></a-text>
+                <a-text id="day-header-2" value="Сьогодні" font="ukrFont.json" shader="msdf" negate="false" align="center" position="0 1.1 0.02" color="#333" width="4"></a-text>
+                <a-entity id="schedule-aud-2" position="-1.8 0.7 0.02"></a-entity>
+            </a-entity>
+        </a-marker>
+
+        <a-marker type='barcode' value='2'>
+            <a-entity position="0 0 0" rotation="-90 0 0" scale="1.5 1.5 1.5">
+                <a-plane position="0 -0.5 0" width="4" height="4.5" color="#FFF" opacity="0.95"></a-plane>
+                <a-plane position="0 1.5 0.01" width="4" height="0.5" color="#1976D2"></a-plane>
+                <a-text value="AUD: 10" font="ukrFont.json" shader="msdf" negate="false" align="center" position="0 1.5 0.02" color="#FFF" width="6"></a-text>
+                <a-text id="day-header-10" value="Сьогодні" font="ukrFont.json" shader="msdf" negate="false" align="center" position="0 1.1 0.02" color="#333" width="4"></a-text>
+                <a-entity id="schedule-aud-10" position="-1.8 0.7 0.02"></a-entity>
+            </a-entity>
+        </a-marker>
+
+        <a-entity camera></a-entity>
+    </a-scene>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDzzIPI2fT_ulFO6-ZJBvo8gzWG0mVhi2k",
+            authDomain: "ar-schedule-79f5d.firebaseapp.com",
+            databaseURL: "https://ar-schedule-79f5d-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "ar-schedule-79f5d",
+            storageBucket: "ar-schedule-79f5d.firebasestorage.app",
+            messagingSenderId: "66430771930",
+            appId: "1:664307719308:web:627edd401a6e56be1d6fa9"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        const daysMap = ["Неділя", "Понеділок", "Вівторок", "Середа", "Четвер", "П'ятниця", "Субота"];
+        const todayIndex = new Date().getDay(); 
+        const displayDayIndex = (todayIndex === 0 || todayIndex === 6) ? 1 : todayIndex;
+        
+        document.querySelector('#day-header-2').setAttribute('value', daysMap[displayDayIndex]);
+        document.querySelector('#day-header-10').setAttribute('value', daysMap[displayDayIndex]);
+
+        onValue(ref(db, 'schedule'), (snapshot) => {
+            const data = snapshot.val();
+            let fullSchedule = [];
+            if (data) fullSchedule = Object.values(data);
+            renderSchedule("2", "#schedule-aud-2", fullSchedule);
+            renderSchedule("10", "#schedule-aud-10", fullSchedule);
+        });
+
+        function renderSchedule(auditoriumID, containerID, scheduleData) {
+            const container = document.querySelector(containerID);
+            while (container.firstChild) container.removeChild(container.firstChild);
+
+            const pairs = scheduleData.filter(p => p.auditorium === auditoriumID && p.day === displayDayIndex);
+            pairs.sort((a, b) => a.time.localeCompare(b.time));
+
+            if (pairs.length === 0) {
+                const noPairs = document.createElement('a-text');
+                noPairs.setAttribute('value', "Пар немає");
+                noPairs.setAttribute('font', 'ukrFont.json');
+                noPairs.setAttribute('shader', 'msdf');
+                noPairs.setAttribute('color', '#555');
+                noPairs.setAttribute('align', 'center');
+                noPairs.setAttribute('position', '2 -0.5 0');
+                noPairs.setAttribute('width', '4');
+                container.appendChild(noPairs);
+                return;
+            }
+
+            let yPos = 0;
+            pairs.forEach(pair => {
+                const time = document.createElement('a-text');
+                time.setAttribute('value', pair.time);
+                time.setAttribute('color', '#000');
+                time.setAttribute('width', '3.5');
+                time.setAttribute('position', `0.2 ${yPos} 0`);
+                container.appendChild(time);
+
+                const subject = document.createElement('a-text');
+                subject.setAttribute('value', pair.subject);
+                subject.setAttribute('font', 'ukrFont.json');
+                subject.setAttribute('shader', 'msdf');
+                subject.setAttribute('negate', 'false');
+                subject.setAttribute('color', '#333');
+                subject.setAttribute('width', '3.5');
+                subject.setAttribute('position', `1.0 ${yPos} 0`);
+                container.appendChild(subject);
+
+                const details = document.createElement('a-text');
+                details.setAttribute('value', `${pair.group} | ${pair.teacher}`);
+                details.setAttribute('font', 'ukrFont.json');
+                details.setAttribute('shader', 'msdf');
+                details.setAttribute('negate', 'false');
+                details.setAttribute('color', '#666');
+                details.setAttribute('width', '2.8');
+                details.setAttribute('position', `1.0 ${yPos - 0.15} 0`);
+                container.appendChild(details);
+
+                const line = document.createElement('a-plane');
+                line.setAttribute('color', '#CCC');
+                line.setAttribute('height', '0.005');
+                line.setAttribute('width', '3.5');
+                line.setAttribute('position', `1.75 ${yPos - 0.3} 0`);
+                container.appendChild(line);
+
+                yPos -= 0.5;
+            });
+        }
+    </script>
+</body>
+</html>

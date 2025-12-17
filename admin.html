@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Адмінка Розкладу v2.0</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 1000px; margin: 0 auto; padding: 20px; background: #f0f2f5; }
+        
+        /* Стилі для вкладок */
+        .tabs { display: flex; margin-bottom: 20px; border-bottom: 2px solid #ddd; }
+        .tab-btn { padding: 10px 20px; cursor: pointer; border: none; background: none; font-size: 16px; font-weight: bold; color: #666; }
+        .tab-btn.active { color: #007bff; border-bottom: 3px solid #007bff; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* Стилі форми */
+        .form-container { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .full-width { grid-column: 1 / -1; }
+        
+        label { font-size: 12px; color: #555; font-weight: bold; margin-bottom: 2px; display: block; }
+        select, input { padding: 10px; width: 100%; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 14px; }
+        
+        /* Кнопки */
+        .btn-save { background: #28a745; color: white; border: none; padding: 12px; border-radius: 6px; cursor: pointer; font-size: 16px; margin-top: 10px; width: 100%; }
+        .btn-save:hover { background: #218838; }
+        .btn-cancel { background: #6c757d; display: none; margin-top: 10px; color: white; border: none; padding: 12px; border-radius: 6px; cursor: pointer; width: 100%; }
+
+        /* Список карток */
+        .card-item { background: white; border-left: 5px solid #007bff; margin-top: 15px; padding: 15px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .actions button { margin-left: 5px; padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer; }
+        .btn-edit { background: #ffc107; color: #333; }
+        .btn-delete { background: #dc3545; color: white; }
+
+        /* Таблиця */
+        table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; margin-top: 15px; }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #ddd; }
+        th { background-color: #007bff; color: white; }
+        tr:hover { background-color: #f1f1f1; }
+    </style>
+</head>
+<body>
+
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+        <h1>🎓 Керування Розкладом</h1>
+        <div style="font-size: 14px; color: #666;">Статус: <span id="status" style="color:green">● Підключено</span></div>
+    </div>
+
+    <div class="tabs">
+        <button class="tab-btn active" onclick="openTab('editor')">✏️ Редактор</button>
+        <button class="tab-btn" onclick="openTab('table-view')">📊 Повна Таблиця</button>
+    </div>
+
+    <div id="editor" class="tab-content active">
+        <div class="form-container">
+            <input type="hidden" id="edit-id">
+
+            <div>
+                <label>Аудиторія</label>
+                <select id="auditorium">
+                    <option value="2">Аудиторія 2</option>
+                    <option value="10">Аудиторія 10</option>
+                </select>
+            </div>
+
+            <div>
+                <label>День тижня</label>
+                <select id="day">
+                    <option value="1">Понеділок</option>
+                    <option value="2">Вівторок</option>
+                    <option value="3">Середа</option>
+                    <option value="4">Четвер</option>
+                    <option value="5">П'ятниця</option>
+                    <option value="6">Субота</option>
+                </select>
+            </div>
+
+            <div>
+                <label>Час початку</label>
+                <select id="time">
+                    <option value="08:20">08:20 (1 пара)</option>
+                    <option value="09:50">09:50 (2 пара)</option>
+                    <option value="11:40">11:40 (3 пара)</option>
+                    <option value="13:10">13:10 (4 пара)</option>
+                    <option value="14:40">14:40 (5 пара)</option>
+                    <option value="16:10">16:10 (6 пара)</option>
+                </select>
+            </div>
+
+            <div>
+                <label>Група</label>
+                <select id="group">
+                    <option value="КН-22">КН-22</option>
+                    <option value="КН-25">КН-25</option>
+                    <option value="МГ-21">МГ-21</option>
+                </select>
+            </div>
+
+            <div class="full-width">
+                <label>Предмет (4 курс)</label>
+                <select id="subject">
+                    <option value="">-- Оберіть предмет --</option>
+                    <option value="Інтелектуальні системи">Інтелектуальні системи (ШІ)</option>
+                    <option value="Управління ІТ-проєктами">Управління ІТ-проєктами</option>
+                    <option value="Захист інформації">Захист інформації та кібербезпека</option>
+                    <option value="Розробка ігор (GameDev)">Розробка ігор (GameDev)</option>
+                    <option value="Хмарні технології">Хмарні технології</option>
+                    <option value="Дипломне проектування">Дипломне проектування</option>
+                    <option value="Веб-технології та Web 3.0">Веб-технології та Web 3.0</option>
+                </select>
+            </div>
+
+            <div class="full-width">
+                <label>Викладач</label>
+                <select id="teacher">
+                    <option value="">-- Оберіть викладача --</option>
+                    <option value="Книшук А.В.">Книшук А.В.</option>
+                    <option value="Ізвалов О.В.">Ізвалов О.В.</option>
+                    <option value="Сурков К.Ю.">Сурков К.Ю.</option>
+                    <option value="Паращук С.Д.">Паращук С.Д.</option>
+                    <option value="Бондар О. П.">Бондар О. П.</option>
+                </select>
+            </div>
+
+            <div class="full-width" style="display:flex; gap:10px;">
+                <button id="save-btn" class="btn-save" onclick="saveData()">💾 Додати пару</button>
+                <button id="cancel-btn" class="btn-cancel" onclick="resetForm()">❌ Скасувати</button>
+            </div>
+        </div>
+
+        <h3>Останні зміни:</h3>
+        <div id="list">Завантаження...</div>
+    </div>
+
+    <div id="table-view" class="tab-content">
+        <h3>📅 Повний розклад (Live)</h3>
+        <table id="full-schedule-table">
+            <thead>
+                <tr>
+                    <th>День</th>
+                    <th>Час</th>
+                    <th>Аудиторія</th>
+                    <th>Предмет</th>
+                    <th>Група</th>
+                    <th>Викладач</th>
+                </tr>
+            </thead>
+            <tbody>
+                </tbody>
+        </table>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getDatabase, ref, push, update, onValue, remove } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+        // --- ТВІЙ КОНФІГ ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyDzzIPI2fT_ulFO6-ZJBvo8gzWG0mVhi2k",
+            authDomain: "ar-schedule-79f5d.firebaseapp.com",
+            databaseURL: "https://ar-schedule-79f5d-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "ar-schedule-79f5d",
+            storageBucket: "ar-schedule-79f5d.firebasestorage.app",
+            messagingSenderId: "66430771930",
+            appId: "1:664307719308:web:627edd401a6e56be1d6fa9"
+        };
+        // -------------------
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        // Перемикання вкладок
+        window.openTab = function(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            // Підсвітити кнопку
+            event.target.classList.add('active');
+        }
+
+        // === ЗБЕРЕЖЕННЯ (ДОДАВАННЯ АБО ОНОВЛЕННЯ) ===
+        window.saveData = function() {
+            const id = document.getElementById('edit-id').value; // Якщо тут є ID, значить ми редагуємо
+            
+            const data = {
+                auditorium: document.getElementById('auditorium').value,
+                day: parseInt(document.getElementById('day').value),
+                time: document.getElementById('time').value,
+                subject: document.getElementById('subject').value,
+                group: document.getElementById('group').value,
+                teacher: document.getElementById('teacher').value
+            };
+
+            if(!data.subject || !data.teacher) return alert("Заповніть всі поля!");
+
+            if (id) {
+                // РЕЖИМ РЕДАГУВАННЯ
+                update(ref(db, 'schedule/' + id), data)
+                    .then(() => {
+                        alert("✅ Оновлено!");
+                        resetForm();
+                    })
+                    .catch(e => alert("Помилка: " + e));
+            } else {
+                // РЕЖИМ СТВОРЕННЯ
+                push(ref(db, 'schedule'), data)
+                    .then(() => alert("✅ Додано!"))
+                    .catch(e => alert("Помилка: " + e));
+            }
+        }
+
+        // === РЕДАГУВАННЯ (ЗАПОВНИТИ ФОРМУ) ===
+        window.editPair = function(id, aud, day, time, subj, grp, teach) {
+            // Заповнюємо поля
+            document.getElementById('edit-id').value = id;
+            document.getElementById('auditorium').value = aud;
+            document.getElementById('day').value = day;
+            document.getElementById('time').value = time;
+            document.getElementById('subject').value = subj;
+            document.getElementById('group').value = grp;
+            document.getElementById('teacher').value = teach;
+
+            // Змінюємо кнопки
+            document.getElementById('save-btn').innerText = "🔄 Оновити пару";
+            document.getElementById('save-btn').style.background = "#ffc107";
+            document.getElementById('save-btn').style.color = "#333";
+            document.getElementById('cancel-btn').style.display = "block";
+
+            // Перемикаємо на вкладку редактора, якщо ми в таблиці
+            openTab('editor');
+            document.querySelector('.tab-btn.active').classList.remove('active'); // простий фікс UI
+            document.querySelector('button[onclick="openTab(\'editor\')"]').classList.add('active');
+        }
+
+        // === СКАСУВАННЯ / ОЧИЩЕННЯ ===
+        window.resetForm = function() {
+            document.getElementById('edit-id').value = "";
+            document.getElementById('subject').value = "";
+            document.getElementById('teacher').value = "";
+            
+            // Повертаємо стиль кнопок
+            document.getElementById('save-btn').innerText = "💾 Додати пару";
+            document.getElementById('save-btn').style.background = "#28a745";
+            document.getElementById('save-btn').style.color = "white";
+            document.getElementById('cancel-btn').style.display = "none";
+        }
+
+        // === ВИДАЛЕННЯ ===
+        window.deletePair = function(id) {
+            if(confirm('Ви точно хочете видалити цей запис?')) {
+                remove(ref(db, 'schedule/' + id));
+            }
+        }
+
+        // === СЛУХАЄМО ДАНІ (LIVE UPDATE) ===
+        const listDiv = document.getElementById('list');
+        const tableBody = document.querySelector('#full-schedule-table tbody');
+        const daysMap = ["", "Понеділок", "Вівторок", "Середа", "Четвер", "П'ятниця", "Субота"];
+
+        onValue(ref(db, 'schedule'), (snapshot) => {
+            const data = snapshot.val();
+            listDiv.innerHTML = "";
+            tableBody.innerHTML = "";
+
+            if (data) {
+                // Сортуємо дані (спочатку по днях, потім по часу)
+                const sortedKeys = Object.keys(data).sort((a,b) => {
+                    if (data[a].day !== data[b].day) return data[a].day - data[b].day;
+                    return data[a].time.localeCompare(data[b].time);
+                });
+
+                sortedKeys.forEach(key => {
+                    const p = data[key];
+                    
+                    // 1. Оновлюємо список карток (Вкладка Editor)
+                    const div = document.createElement('div');
+                    div.className = 'card-item';
+                    div.innerHTML = `
+                        <div>
+                            <strong>${daysMap[p.day]} (${p.time})</strong> - Ауд. ${p.auditorium}<br>
+                            ${p.subject} <span style="color:grey">(${p.teacher})</span>
+                        </div>
+                        <div class="actions">
+                            <button class="btn-edit" onclick="editPair('${key}', '${p.auditorium}', '${p.day}', '${p.time}', '${p.subject}', '${p.group}', '${p.teacher}')">✏️</button>
+                            <button class="btn-delete" onclick="deletePair('${key}')">🗑️</button>
+                        </div>
+                    `;
+                    listDiv.appendChild(div);
+
+                    // 2. Оновлюємо Велику Таблицю (Вкладка Table View)
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${daysMap[p.day]}</td>
+                        <td>${p.time}</td>
+                        <td style="text-align:center"><strong>${p.auditorium}</strong></td>
+                        <td>${p.subject}</td>
+                        <td>${p.group}</td>
+                        <td>${p.teacher}</td>
+                    `;
+                    tableBody.appendChild(tr);
+                });
+            } else {
+                listDiv.innerHTML = "<p>База порожня</p>";
+                tableBody.innerHTML = "<tr><td colspan='6' style='text-align:center'>Немає записів</td></tr>";
+            }
+        });
+    </script>
+</body>
+</html>
